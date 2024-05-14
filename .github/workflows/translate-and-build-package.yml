@@ -2,6 +2,12 @@ name: Translate and Build Package
 
 on:
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        type: boolean
+        description: 'With TMATE'
+        required: false
+        default: false
 
   push:
     branches: [ "*" ]
@@ -36,14 +42,21 @@ jobs:
           # Install attranslator
           sudo npm install --location=global attranslate
 
+      ## Tmate ##
+      - name: Setup TMATE Session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
       - name: Translate Package
-        shell: bash -O extglob {0}
+        shell: bash #-O extglob {0}
         env:
           AZURE_KEY: ${{ secrets.AZURE_KEY }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
         run: |
           cd ..
           git clone https://github.com/biglinux/big-auto-translator.git
           mv big-auto-translator/gettext_po_generator_github.sh .
+          sudo cp -f big-auto-translator/openai-translate.js /usr/local/lib/node_modules/attranslate/dist/services/openai-translate.js
           gitfolder=$(echo ${{ github.repository }} | rev | cut -d "/" -f1 | rev)
           # export OriginalLang=en-US
           bash gettext_po_generator_github.sh $gitfolder
