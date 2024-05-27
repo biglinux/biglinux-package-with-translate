@@ -41,6 +41,9 @@ jobs:
           npm
           # Install attranslator
           sudo npm install --location=global attranslate
+          if [ ! -d "locale" ];then
+            mkdir locale
+          fi
 
       ## Tmate ##
       - name: Setup TMATE Session
